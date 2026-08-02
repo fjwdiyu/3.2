@@ -8,17 +8,17 @@ profile = {
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
-        print(self.headers)          # 收到的请求头
-        print(self.client_address)
+        print(f"{self.command} {self.path} from {self.client_address[0]}")
         if self.path == "/api/profile":
+            body = json.dumps(profile, ensure_ascii=False).encode("utf-8")
             self.send_response(200)
-            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
             self.end_headers()
-            body = json.dumps(profile, ensure_ascii=False)  # ensure_ascii=False：让中文原样输出
-            self.wfile.write(body.encode("utf-8"))
+            self.wfile.write(body)
         else:
             self.send_response(404)
             self.end_headers()
 
 print("后端已启动：http://localhost:8000/api/profile")
-HTTPServer(("", 8000), Handler).serve_forever()
+HTTPServer(("127.0.0.1", 8000), Handler).serve_forever()
