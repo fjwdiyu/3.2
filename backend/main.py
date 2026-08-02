@@ -1,24 +1,42 @@
-from http.server import BaseHTTPRequestHandler, HTTPServer
-import json
+from fastapi import FastAPI
+from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_methods=["GET", "POST"],
+    allow_headers= ["*"],
+)
 
 profile = {
     "heroTitle": "关于我",
     "heroSubtitle": "项目，创意，灵感，心得，我的作品",
+    "featuredWork": {
+    "kicker": "作品",
+    "title": "文字实验室",
+    "copy": "拼音和情绪，挖掘中文里的细节",
+    "linkLabel": "打开作品",
+    },
+    "identity": {
+    "motto": "已识乾坤大，尤怜草木青",
+    "learning": "零到全栈",
+    },
 }
 
-class Handler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        print(f"{self.command} {self.path} from {self.client_address[0]}")
-        if self.path == "/api/profile":
-            body = json.dumps(profile, ensure_ascii=False).encode("utf-8")
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
-        else:
-            self.send_response(404)
-            self.end_headers()
+class AnalyzeRequest(BaseModel):
+    text: str
 
-print("后端已启动：http://localhost:8000/api/profile")
-HTTPServer(("127.0.0.1", 8000), Handler).serve_forever()
+@app.get("/api/profile")
+def get_profile():
+    return profile
+
+@app.post("/api/analyze")
+def analyze(req: AnalyzeRequest):
+    return {
+        "text": req.text,
+        "score": 0.5,
+        "label": "偏平静",
+        "pinyin": "（模块 6 再说）",
+    }
